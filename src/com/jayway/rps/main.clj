@@ -1,9 +1,11 @@
 (ns com.jayway.rps.main
   (:require [com.jayway.rps.core :as c]
             [com.jayway.rps.framework :as f] 
-            [com.jayway.rps.domain :as d]))
+            [com.jayway.rps.domain :as d]
+            [com.jayway.rps.atom :as a]))
 
-(defn -main [& args]
-  (f/handle-command (d/->CreateGameCommand 1 :ply1 :rock) f/in-memory-event-store)
-  (f/handle-command (d/->DecideMoveCommand 1 :ply2 :paper) f/in-memory-event-store)
-  (f/retrieve-event-stream f/in-memory-event-store 1))
+(defn -main [uri aggregate-id & args]
+  (let [store (a/atom-event-store uri)]
+    (f/handle-command (d/->CreateGameCommand aggregate-id "player-1" "rock") store)
+    (f/handle-command (d/->DecideMoveCommand aggregate-id "player-2" "scissors") store)
+    (c/get-events (c/retrieve-event-stream store aggregate-id))))

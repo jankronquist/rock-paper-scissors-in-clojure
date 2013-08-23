@@ -14,15 +14,15 @@
 ; move rules
 
 (defmulti compare-moves vector)
-(defmethod compare-moves [:rock :rock] [x y] :tie)
-(defmethod compare-moves [:rock :paper] [x y] :loss)
-(defmethod compare-moves [:rock :scissor] [x y] :victory)
-(defmethod compare-moves [:paper :rock] [x y] :victory)
-(defmethod compare-moves [:paper :paper] [x y] :tie)
-(defmethod compare-moves [:paper :scissor] [x y] :loss)
-(defmethod compare-moves [:scissor :rock] [x y] :loss)
-(defmethod compare-moves [:scissor :paper] [x y] :victory)
-(defmethod compare-moves [:scissor :scissor] [x y] :tie)
+(defmethod compare-moves ["rock" "rock"] [x y] :tie)
+(defmethod compare-moves ["rock" "paper"] [x y] :loss)
+(defmethod compare-moves ["rock" "scissors"] [x y] :victory)
+(defmethod compare-moves ["paper" "rock"] [x y] :victory)
+(defmethod compare-moves ["paper" "paper"] [x y] :tie)
+(defmethod compare-moves ["paper" "scissors"] [x y] :loss)
+(defmethod compare-moves ["scissors" "rock"] [x y] :loss)
+(defmethod compare-moves ["scissors" "paper"] [x y] :victory)
+(defmethod compare-moves ["scissors" "scissors"] [x y] :tie)
 
 ; game aggregate - event handlers
 
