@@ -13,12 +13,16 @@
 (defn uri-for-relation [relation links]
   (:uri (first (filter #(= relation (:relation %)) links))))
 
+(defn construct-record [cs m]
+  (when-let [f (resolve (symbol (clojure.string/replace cs #"\.(\w+)$" "/map->$1")))]
+    (f m)))
+
 (defn load-event [uri]
   (let [response (client/get uri {:as :json})
         event-data (get-in response [:body :content :data] {})
         event-type (.replace (get-in response [:body :content :eventType]) \_ \.)]
     (if event-type
-      (eval (list (symbol (str event-type "/create")) event-data))
+      (construct-record event-type event-data)
       event-data)))
 
 (declare load-events)
