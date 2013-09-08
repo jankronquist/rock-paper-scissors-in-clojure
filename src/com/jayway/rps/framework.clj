@@ -8,7 +8,7 @@
 
 (defn handle-command [command event-store]
   (let [event-stream (c/retrieve-event-stream event-store (:aggregate-id command))
-        old-events (c/get-events event-stream)
+        old-events (:events event-stream)
         current-state (apply-events {} old-events)
         new-events (c/perform command current-state)]
     (c/append-events event-store (:aggregate-id command) event-stream new-events)))

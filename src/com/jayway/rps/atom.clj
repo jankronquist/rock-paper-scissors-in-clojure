@@ -13,9 +13,9 @@
 (defn uri-for-relation [relation links]
   (:uri (first (filter #(= relation (:relation %)) links))))
 
-(defn construct-record [cs m]
-  (when-let [f (resolve (symbol (clojure.string/replace cs #"\.(\w+)$" "/map->$1")))]
-    (f m)))
+(defn construct-record [type string]
+  (when-let [f (resolve (symbol (clojure.string/replace type #"\.(\w+)$" "/map->$1")))]
+    (f string)))
 
 (defn load-event [uri]
   (let [response (client/get uri {:as :json})
@@ -38,35 +38,34 @@
 (defn load-events [uri]
   (load-events-from-list (client/get uri {:as :json})))
 
-(def empty-stream (reify c/EventStream
-                    (version [this] -1)
-                    (get-events [this] [])))
+(def empty-stream {:version (fn [] -1) :events []})
+
+; three cases:
+; 1) stream does not exist
+; 2) stream exists, but has only a single page
+; 3) stream exists and has multiple pages
+(defn load-events-from-feed [uri]
+	(let [response (client/get uri {:as :json :throw-exceptions false})]
+	  (if-not (= 200 (:status response))
+	    empty-stream ; case 1
+	    (let [body (:body response)
+	          links (:links body)
+	          last-link (uri-for-relation "last" links)
+	          events (if last-link
+	                       (load-events last-link) ; case 3
+	                       (load-events-from-list response))] ; case 2
+	      {:version (fn [] (dec (count events)))
+	       :events events}))))
 
 (defn atom-event-store [uri]
   (letfn [(stream-uri [aggregate-id] (str uri "/streams/" aggregate-id))]
     (reify c/EventStore
       (retrieve-event-stream [this aggregate-id]
-        ; three cases:
-        ; 1) stream does not exist
-        ; 2) stream exists, but has only a single page
-        ; 3) stream exists and has multiple pages
-        (let [root-uri (stream-uri aggregate-id)
-              response (client/get root-uri {:as :json :throw-exceptions false})]
-          (if-not (= 200 (:status response))
-            empty-stream ; case 1
-            (let [body (:body response)
-                  links (:links body)
-                  last-link (uri-for-relation "last" links)
-                  events (if last-link
-                               (load-events last-link) ; case 3
-                               (load-events-from-list response))] ; case 2
-              (reify c/EventStream
-                (version [this] (dec (count events)))
-                (get-events [this] events))))))
-      
+        (load-events-from-feed (stream-uri aggregate-id)))
+          
       (append-events 
         [this aggregate-id previous-event-stream events]
         (client/post (stream-uri aggregate-id)
                      {:body (json/generate-string (map to-eventstore-format events))
                       :content-type :json
-                      :headers {"ES-ExpectedVersion" (str (c/version previous-event-stream))}})))))
+                      :headers {"ES-ExpectedVersion" (str ((:version previous-event-stream)))}})))))

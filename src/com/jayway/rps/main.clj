@@ -8,4 +8,4 @@
   (let [store (a/atom-event-store uri)]
     (f/handle-command (d/->CreateGameCommand aggregate-id "player-1" "rock") store)
     (f/handle-command (d/->DecideMoveCommand aggregate-id "player-2" "scissors") store)
-    (c/get-events (c/retrieve-event-stream store aggregate-id))))
+    (:events (c/retrieve-event-stream store aggregate-id))))
