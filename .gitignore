@@ -4,3 +4,8 @@ classes
 .lein-deps-sum
 /bin
 .lein-repl-history
+.lein-env
+.classpath
+.nrepl-port
+.project
+/target
