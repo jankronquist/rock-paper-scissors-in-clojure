@@ -7,23 +7,20 @@
         [hiccup.core]
         [com.jayway.rps.facebook])
   (:require [compojure.route :as route]
-            [com.jayway.rps.atom :as a]
-            [com.jayway.rps.framework :as f]
-            [com.jayway.rps.domain :as d]
-            [clj-http.client :as client]))
+            [com.jayway.rps.core :as c]))
 
-(def event-store (a/atom-event-store (env :event-store-uri)))
-
-(defn new-aggregate-id [prefix]
-  (str prefix "-" (.toString (java.util.UUID/randomUUID))))
+(def rps (reify com.jayway.rps.core.RockPaperScissors
+           (create-game [this] "NEW")
+           (perform-command [this command] (println command))
+           (load-game [this game-id] (println "load " game-id))))
 
 (defn create-game [player-id]
-  (let [aggregate-id (new-aggregate-id "game")]
-    (f/handle-command (d/->OnlyCreateGameCommand aggregate-id player-id) event-store)
+  (let [aggregate-id (c/create-game rps)]
+    (c/perform-command rps (c/->OnlyCreateGameCommand aggregate-id player-id))
     aggregate-id))
 
 (defn make-move [game-id player-id move]
-  (f/handle-command (d/->DecideMoveCommand game-id player-id move) event-store))
+  (c/perform-command rps (c/->DecideMoveCommand game-id player-id move)))
 
 (defn get-user [request]
   (get-in request [:session :me :name]))
@@ -50,9 +47,7 @@
   [:ul (map (fn [[player move]] [:li (str (name player) " moved " move)]) moves)])
 
 (defn render-game [game-id player-id]
-  (let [uri (str (env :event-store-uri) "/projection/games/state?partition=" game-id)
-        reply (client/get uri {:as :json})
-        game (:body reply)]
+  (let [game (c/load-game rps game-id)]
     (html [:body
            [:p (str "Created by " (:creator game))]
            (condp = (:state game)
@@ -64,7 +59,6 @@
              "???")])))
 
 (defroutes handler
-  (GET "/server" [] (str "URI=" (env :event-store-uri)))
   (GET "/" [] (html [:body (render-create-game-form)]))
   (GET "/games" [] (html [:body (render-create-game-form)]))
   (POST "/games" [:as r] 
@@ -83,9 +77,15 @@
       (println "RESPONSE " level " : " response)
       response)))
 
-(def app 
-    (-> handler 
-        wrap-require-facebook-login
-        wrap-session 
-        wrap-keyword-params
-        wrap-params))
+(defn create-app [implementation]
+  (def rps implementation)
+  (-> handler 
+      wrap-require-facebook-login
+      wrap-session 
+      wrap-keyword-params
+      wrap-params))
+
+(defn -main [& args]
+ (let [game-id (c/create-game rps)]
+   (c/perform-command rps (c/->CreateGameCommand game-id "player-1" "rock"))
+   (c/perform-command rps (c/->DecideMoveCommand game-id "player-2" "scissors"))))

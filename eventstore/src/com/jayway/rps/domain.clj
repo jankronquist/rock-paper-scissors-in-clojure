@@ -1,11 +1,8 @@
 (ns com.jayway.rps.domain
-  (:require [com.jayway.rps.core :as c]))
+  (:require [com.jayway.rps.core :as c]
+            [com.jayway.rps.framework :as f]))
 
 ; MESSAGES
-
-(defrecord CreateGameCommand [aggregate-id player move])
-(defrecord OnlyCreateGameCommand [aggregate-id player])
-(defrecord DecideMoveCommand [aggregate-id player move])
 
 (defrecord GameCreatedEvent [game-id creator])
 (defrecord MoveDecidedEvent [game-id player move])
@@ -27,41 +24,41 @@
 
 ; game aggregate - event handlers
 
-(defmethod c/apply-event GameCreatedEvent [state event]
+(defmethod f/apply-event GameCreatedEvent [state event]
   (assoc state
     :state :started
     :creator (:creator event)))
 
-(defmethod c/apply-event MoveDecidedEvent [state event]
+(defmethod f/apply-event MoveDecidedEvent [state event]
   (assoc state
     :move (:move event)))
 
-(defmethod c/apply-event GameWonEvent [state event]
+(defmethod f/apply-event GameWonEvent [state event]
   (assoc state
     :state :completed))
 
-(defmethod c/apply-event GameTiedEvent [state event]
+(defmethod f/apply-event GameTiedEvent [state event]
   (assoc state
     :state :completed))
 
 ; game aggregate command handler
 
-(extend-protocol c/CommandHandler
-  CreateGameCommand
-  (c/perform [command state]
+(extend-protocol f/CommandHandler
+  com.jayway.rps.core.CreateGameCommand
+  (perform [command state]
     (when (:state state)
       (throw (Exception. "Already in started")))
     [(->GameCreatedEvent (:aggregate-id command) (:player command))
      (->MoveDecidedEvent (:aggregate-id command) (:player command) (:move command))])
 
-  OnlyCreateGameCommand
-  (c/perform [command state]
+  com.jayway.rps.core.OnlyCreateGameCommand
+  (perform [command state]
     (when (:state state)
       (throw (Exception. "Already in started")))
     [(->GameCreatedEvent (:aggregate-id command) (:player command))])
 
-  DecideMoveCommand
-  (c/perform [command state]
+  com.jayway.rps.core.DecideMoveCommand
+  (perform [command state]
     (when-not (= (:state state) :started)
       (throw (Exception. "Incorrect state")))
     (let [events [(->MoveDecidedEvent (:aggregate-id command) (:player command) (:move command))]]

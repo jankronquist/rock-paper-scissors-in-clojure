@@ -1,5 +1,6 @@
 (ns com.jayway.rps.atom
   (:require [com.jayway.rps.core :as c]
+            [com.jayway.rps.framework :as f]
             [clj-http.client :as client]
             [cheshire.core :as json]))
 
@@ -59,7 +60,7 @@
 
 (defn atom-event-store [uri]
   (letfn [(stream-uri [aggregate-id] (str uri "/streams/" aggregate-id))]
-    (reify c/EventStore
+    (reify f/EventStore
       (retrieve-event-stream [this aggregate-id]
         (load-events-from-feed (stream-uri aggregate-id)))
           

@@ -2,10 +2,10 @@
 lib
 classes
 .lein-deps-sum
-/bin
+*/bin
 .lein-repl-history
 .lein-env
 .classpath
 .nrepl-port
 .project
-/target
+*/target
