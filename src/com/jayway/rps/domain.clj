@@ -4,6 +4,7 @@
 ; MESSAGES
 
 (defrecord CreateGameCommand [aggregate-id player move])
+(defrecord OnlyCreateGameCommand [aggregate-id player])
 (defrecord DecideMoveCommand [aggregate-id player move])
 
 (defrecord GameCreatedEvent [game-id creator])
@@ -53,14 +54,21 @@
     [(->GameCreatedEvent (:aggregate-id command) (:player command))
      (->MoveDecidedEvent (:aggregate-id command) (:player command) (:move command))])
 
+  OnlyCreateGameCommand
+  (c/perform [command state]
+    (when (:state state)
+      (throw (Exception. "Already in started")))
+    [(->GameCreatedEvent (:aggregate-id command) (:player command))])
+
   DecideMoveCommand
   (c/perform [command state]
     (when-not (= (:state state) :started)
       (throw (Exception. "Incorrect state")))
-    (when (= (:createdBy state) (:player command))
-      (throw (Exception. "Cannot play against yourself")))
-    [(->MoveDecidedEvent (:aggregate-id command) (:player command) (:move command))
-     (case (compare-moves (:move state) (:move command))
-       :victory (->GameWonEvent (:aggregate-id command) (:creator state) (:player command))
-       :loss (->GameWonEvent (:aggregate-id command) (:player command) (:creator state))
-       :tie (->GameTiedEvent (:aggregate-id command)))]))
+    (let [events [(->MoveDecidedEvent (:aggregate-id command) (:player command) (:move command))]]
+      (if-not (:move state)
+        events
+        (conj events 
+              (case (compare-moves (:move state) (:move command))
+                :victory (->GameWonEvent (:aggregate-id command) (:creator state) (:player command))
+                :loss (->GameWonEvent (:aggregate-id command) (:player command) (:creator state))
+                :tie (->GameTiedEvent (:aggregate-id command))))))))

@@ -17,9 +17,9 @@
 (defn new-aggregate-id [prefix]
   (str prefix "-" (.toString (java.util.UUID/randomUUID))))
 
-(defn create-game [player-id move]
+(defn create-game [player-id]
   (let [aggregate-id (new-aggregate-id "game")]
-    (f/handle-command (d/->CreateGameCommand aggregate-id player-id move) event-store)
+    (f/handle-command (d/->OnlyCreateGameCommand aggregate-id player-id) event-store)
     aggregate-id))
 
 (defn make-move [game-id player-id move]
@@ -41,6 +41,11 @@
                [:option {:value "scissors"} "Scissors"]]
               [:input {:type "submit" :value button-text}]]))
 
+(defn render-create-game-form 
+  []
+  [:form {:action "/games" :method "post"} 
+   [:input {:type "submit" :value "Create game"}]])
+
 (defn render-moves [moves]
   [:ul (map (fn [[player move]] [:li (str (name player) " moved " move)]) moves)])
 
@@ -60,10 +65,10 @@
 
 (defroutes handler
   (GET "/server" [] (str "URI=" (env :event-store-uri)))
-  (GET "/" [] (html [:body (render-move-form)]))
-  (GET "/games" [] (html [:body (render-move-form)]))
-  (POST "/games" [move :as r] 
-        (let [game-id (create-game (get-user r) move)]
+  (GET "/" [] (html [:body (render-create-game-form)]))
+  (GET "/games" [] (html [:body (render-create-game-form)]))
+  (POST "/games" [:as r] 
+        (let [game-id (create-game (get-user r))]
           (ring.util.response/redirect-after-post (str "/games/" game-id))))
   (POST "/games/:game-id" [game-id move :as r] 
         (make-move game-id (get-user r) move)
