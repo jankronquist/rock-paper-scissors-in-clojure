@@ -1,0 +1,82 @@
+[
+
+ ;; framework aggregate
+
+  {:db/id #db/id[:db.part/db]
+  :db/ident :aggregate/version
+  :db/valueType :db.type/long
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+  ;; player
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :player/email
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+  ;; move
+
+  {:db/id #db/id[:db.part/db]
+  :db/ident :move/player
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+  {:db/id #db/id[:db.part/db]
+  :db/ident :move/type
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+  ;; move-type enum values
+ [:db/add #db/id[:db.part/user] :db/ident :move.type/rock]
+ [:db/add #db/id[:db.part/user] :db/ident :move.type/paper]
+ [:db/add #db/id[:db.part/user] :db/ident :move.type/scissors]
+
+ ;; game
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :game/state
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :game/created-by
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+  {:db/id #db/id[:db.part/db]
+  :db/ident :game/player
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/many
+  :db.install/_attribute :db.part/db}
+
+  {:db/id #db/id[:db.part/db]
+  :db/ident :game/winner
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+  {:db/id #db/id[:db.part/db]
+  :db/ident :game/loser
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db.install/_attribute :db.part/db}
+
+  {:db/id #db/id[:db.part/db]
+  :db/ident :game/moves
+  :db/valueType :db.type/ref
+  :db/isComponent true
+  :db/cardinality :db.cardinality/many
+  :db.install/_attribute :db.part/db}
+
+  ;; game-state enum values
+ [:db/add #db/id[:db.part/user] :db/ident :game.state/started]
+ [:db/add #db/id[:db.part/user] :db/ident :game.state/won]
+ [:db/add #db/id[:db.part/user] :db/ident :game.state/tied]
+
+]

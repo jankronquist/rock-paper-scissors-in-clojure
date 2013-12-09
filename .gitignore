@@ -9,3 +9,4 @@ classes
 .nrepl-port
 .project
 */target
+.lein-failures
