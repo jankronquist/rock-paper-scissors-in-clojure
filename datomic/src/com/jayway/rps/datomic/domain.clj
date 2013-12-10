@@ -1,33 +1,29 @@
 (ns com.jayway.rps.datomic.domain
   (:require [datomic.api :as datomic]
-            [com.jayway.rps.datomic.core :as c]))
+            [com.jayway.rps.datomic.framework :as f]))
 
-(defrecord SetPlayerEmailCommand [aggregate-id email])
-
-(defrecord CreateGameCommand [aggregate-id player move])
-(defrecord OnlyCreateGameCommand [aggregate-id player])
-(defrecord DecideMoveCommand [aggregate-id player move])
+(defrecord SetPlayerNameCommand [aggregate-id name])
 
 (defmulti compare-moves vector)
-(defmethod compare-moves [:move.type/rock :move.type/rock] [x y] :tie)
-(defmethod compare-moves [:move.type/rock :move.type/paper] [x y] :loss)
-(defmethod compare-moves [:move.type/rock :move.type/scissors] [x y] :victory)
-(defmethod compare-moves [:move.type/paper :move.type/rock] [x y] :victory)
-(defmethod compare-moves [:move.type/paper :move.type/paper] [x y] :tie)
-(defmethod compare-moves [:move.type/paper :move.type/scissors] [x y] :loss)
-(defmethod compare-moves [:move.type/scissors :move.type/rock] [x y] :loss)
-(defmethod compare-moves [:move.type/scissors :move.type/paper] [x y] :victory)
-(defmethod compare-moves [:move.type/scissors :move.type/scissors] [x y] :tie)
+(defmethod compare-moves [:rock :rock] [x y] :tie)
+(defmethod compare-moves [:rock :paper] [x y] :loss)
+(defmethod compare-moves [:rock :scissors] [x y] :victory)
+(defmethod compare-moves [:paper :rock] [x y] :victory)
+(defmethod compare-moves [:paper :paper] [x y] :tie)
+(defmethod compare-moves [:paper :scissors] [x y] :loss)
+(defmethod compare-moves [:scissors :rock] [x y] :loss)
+(defmethod compare-moves [:scissors :paper] [x y] :victory)
+(defmethod compare-moves [:scissors :scissors] [x y] :tie)
 
-(extend-protocol c/CommandHandler
+(extend-protocol f/CommandHandler
 
-  SetPlayerEmailCommand
-  (c/perform [command state]
+  SetPlayerNameCommand
+  (perform [command state]
     [{:db/id (:aggregate-id command)
-      :player/email (:email command)}])
+      :player/name (:name command)}])
 
-  CreateGameCommand
-  (c/perform [{:keys [player move aggregate-id]} state]
+  com.jayway.rps.core.CreateGameCommand
+  (perform [{:keys [player move aggregate-id]} state]
     (when (:game/state state)
       (throw (ex-info "Already in started" {:state state})))
     (let [move-id (datomic/tempid :db.part/user)]
@@ -39,18 +35,18 @@
         :game/state :game.state/started
         :game/created-by player}]))
 
-  OnlyCreateGameCommand
-  (c/perform [{:keys [player aggregate-id]} state]
+  com.jayway.rps.core.OnlyCreateGameCommand
+  (perform [{:keys [player aggregate-id]} state]
     (when (:game/state state)
       (throw (ex-info "Already in started" {:state state})))
     [{:db/id aggregate-id
       :game/state :game.state/started
       :game/created-by player}])
 
-  DecideMoveCommand
-  (c/perform [{:keys [player move aggregate-id]} state]
+  com.jayway.rps.core.DecideMoveCommand
+  (perform [{:keys [player move aggregate-id]} state]
     (when-not (= (:game/state state) :game.state/started)
-      (throw (ex-info "Incorrect state" {:state state})))
+      (throw (ex-info "Incorrect state: " {:state (:game/state state)})))
     (when (= (:db/id (:move/player (first (:game/moves state)))) player)
       (throw (ex-info "Cannot play against yourself" {:player player})))
     (let [other-move (:move/type (first (:game/moves state)))

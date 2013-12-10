@@ -1,7 +1,7 @@
 (ns com.jayway.rps.datomic.main
   (:require [datomic.api :as datomic]
-            [com.jayway.rps.datomic.core :as c]
             [com.jayway.rps.datomic.framework :as f]
+            [com.jayway.rps.core :as c]
             [com.jayway.rps.datomic.domain :as domain]))
 
 (def uri "datomic:mem://game")
@@ -19,10 +19,10 @@
 (def game-id (f/create-entity conn))
 
 (defn -main [& args]
-  (f/handle-command (domain/->SetPlayerEmailCommand ply1 "one@example.com") conn)
-  (f/handle-command (domain/->SetPlayerEmailCommand ply2 "two@example.com") conn)
-  (f/handle-command (domain/->OnlyCreateGameCommand game-id ply1) conn)
-  (f/handle-command (domain/->DecideMoveCommand game-id ply1 :move.type/rock) conn)
-  (f/handle-command (domain/->DecideMoveCommand game-id ply2 :move.type/scissors) conn)
+  (f/handle-command (domain/->SetPlayerNameCommand ply1 "one") conn)
+  (f/handle-command (domain/->SetPlayerNameCommand ply2 "two") conn)
+  (f/handle-command (c/->OnlyCreateGameCommand game-id ply1) conn)
+  (f/handle-command (c/->DecideMoveCommand game-id ply1 :move.type/rock) conn)
+  (f/handle-command (c/->DecideMoveCommand game-id ply2 :move.type/scissors) conn)
   (print-entity game-id)
   (datomic/shutdown true))

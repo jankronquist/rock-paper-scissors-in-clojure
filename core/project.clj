@@ -8,6 +8,7 @@
   :plugins [[lein-ring "0.8.8"]]
   :ring {:handler com.jayway.rps.web/app}
   :min-lein-version "2.0.0"
+  :aot :all
   :profiles
   {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]
                         [ring-mock "0.1.5"]]}})

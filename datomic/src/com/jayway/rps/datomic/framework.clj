@@ -1,6 +1,8 @@
 (ns com.jayway.rps.datomic.framework
-  (:require [datomic.api :as datomic]
-            [com.jayway.rps.datomic.core :as c]))
+  (:require [datomic.api :as datomic]))
+
+(defprotocol CommandHandler
+  (perform [command state]))
 
 (defn initialize-schema [conn]
   (let [schema-tx (read-string (slurp "resources/schema.dtm"))]
@@ -16,7 +18,7 @@
 (defn handle-command [{:keys [aggregate-id] :as command} conn]
   "Apply the command to its target aggregate using optimistic concurrency. Returns the datomic transaction."
   (let [state (datomic/entity (datomic/db conn) aggregate-id)
-        modification (c/perform command state)
+        modification (perform command state)
         old-version (:aggregate/version state)
         next-version ((fnil inc -1) old-version)
         optimistic-concurrency [:db.fn/cas aggregate-id :aggregate/version old-version next-version]

@@ -13,18 +13,8 @@
             [com.jayway.rps.domain :as d]
             [clj-http.client :as client]))
 
-(def rps
-  (let [event-store (a/atom-event-store (env :event-store-uri))]
-    (reify com.jayway.rps.core.RockPaperScissors
-      (create-game [this] (str "game-" (.toString (java.util.UUID/randomUUID))))
-      (perform-command [this command] (f/handle-command command event-store))
-      (load-game [this game-id] 
-        (let [uri (str (env :event-store-uri) "/projection/games/state?partition=" game-id)
-              reply (client/get uri {:as :json})]
-          (:body reply))))))
-
 (defn -main [& args]
- (let [game-id (c/create-game rps)]
+ (let [game-id (c/create-game com.jayway.rps.eventstore.web/rps)]
    (c/perform-command rps (c/->CreateGameCommand game-id "player-1" "rock"))
    (c/perform-command rps (c/->DecideMoveCommand game-id "player-2" "scissors"))
    (Thread/sleep 2000)
