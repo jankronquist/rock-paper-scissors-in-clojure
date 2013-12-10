@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [com.datomic/datomic-free "0.8.4020.24"]
+                 [com.datomic/datomic-free "0.9.4331"]
                  [rock-paper-scissors-core "1.0.0-SNAPSHOT"]]
   :main com.jayway.rps.datomic.main
   :plugins [[lein-ring "0.8.8"]]

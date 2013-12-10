@@ -6,9 +6,8 @@
             [com.jayway.rps.core :as c]
             [com.jayway.rps.web :as w]))
 
-(def uri "datomic:mem://game")
-(datomic/create-database uri)
-(def conn (datomic/connect uri))
+(datomic/create-database (env :datomic-url))
+(def conn (datomic/connect (env :datomic-url)))
 (f/initialize-schema conn)
 
 (defn to-player-id [name]
