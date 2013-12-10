@@ -15,10 +15,12 @@
 				(create-game [this player-name]
 				  (let [aggregate-id (str "game-" (.toString (java.util.UUID/randomUUID)))]
             (f/handle-command (c/->OnlyCreateGameCommand aggregate-id player-name) event-store)
+            (Thread/sleep 500)
 				    aggregate-id))
 				
 				(make-move [this game-id player-id move]
-          (f/handle-command (c/->DecideMoveCommand game-id player-id move) event-store))
+          (f/handle-command (c/->DecideMoveCommand game-id player-id move) event-store)
+	        (Thread/sleep 500))
     
         (load-game [this game-id] 
           (let [uri (str (env :event-store-uri) "/projection/games/state?partition=" game-id)
