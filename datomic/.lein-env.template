@@ -1,0 +1,4 @@
+{:facebook-redirect-uri "http://localhost:3000/oauth2-callback"
+ :facebook-client-id "YOUR FACEBOOK APP ID"
+ :facebook-client-secret "THE SECRET"
+ :datomic-url "datomic:mem://rps"}

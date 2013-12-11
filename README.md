@@ -1,12 +1,17 @@
 # rock-paper-scissors
 
-The game rock-paper-scissors implemented using CQRS & Event Sourcing in Clojure with event storage in [EventStore](http://geteventstore.com).
+Implementation of the game Rock Paper Scissors in clojure using various data stores. To get started:
 
-Run using:
+* Create a (Facebook application)[https://developers.facebook.com/apps/]. Needed for user authentication.
+* Install (rock-paper-scissors-core)[https://github.com/jankronquist/rock-paper-scissors-in-clojure/tree/master/core]
 
-	lein run <eventStoreUri> <aggregate>
-	
-for example:
+Checkout the different implementations:
 
-  lein run http://127.0.0.1:2113 game-1
+* (eventstore)[https://github.com/jankronquist/rock-paper-scissors-in-clojure/tree/master/eventstore]
+* (datomic)[https://github.com/jankronquist/rock-paper-scissors-in-clojure/tree/master/datomic]
 
+## License
+
+Copyright © 2013 Jan Kronquist
+
+Distributed under the Eclipse Public License, the same as Clojure.
