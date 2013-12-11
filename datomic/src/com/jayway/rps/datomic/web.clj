@@ -44,7 +44,12 @@
               result
               (assoc result
                      :winner (:player/name (:game/winner game))
-                     :loser (:player/name (:game/loser game)))))))))
-
-; from: {:aggregate/version 1, :game/state :game.state/started, :game/created-by {:db/id 17592186045424}, :db/id 17592186045427}
-;to: {:moves {:Jan Kronquist rock}, :creator Jan Kronquist, :state open}
+                     :loser (:player/name (:game/loser game))))))
+      (load-open-games 
+        [this]
+        (into {}
+              (datomic/q '[:find ?game ?name 
+                           :where [?game :game/state :game.state/started]
+                                  [?game :game/created-by ?player]
+                                  [?player :player/name ?name]] 
+                         (datomic/db conn)))))))

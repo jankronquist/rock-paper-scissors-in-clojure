@@ -4,7 +4,7 @@
   (create-game [this player-name])
   (make-move [this game-id player-name move])
   (load-game [this game-id])
-  (to-player-id [this name] name))
+  (load-open-games [this]))
 
 (defrecord CreateGameCommand [aggregate-id player move])
 (defrecord OnlyCreateGameCommand [aggregate-id player])

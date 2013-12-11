@@ -12,6 +12,7 @@
 (def rps (reify com.jayway.rps.core.RockPaperScissors
            (create-game [this player-name] "NEW")
            (make-move [this game-id player-name move] (println "Move: " move))
+           (load-open-games [this] {"gameId" "creator"})
            (load-game [this game-id] (println "load " game-id))))
 
 (defn get-user [request]
@@ -35,6 +36,14 @@
   [:form {:action "/games" :method "post"} 
    [:input {:type "submit" :value "Create game"}]])
 
+(defn render-open-games 
+  [games]
+  [:ul
+   (map 
+     (fn [[game-id creator]] 
+       [:li [:a {:href (str "/games/" game-id)} (str game-id " " creator)]])
+     games)])   
+
 (defn render-moves [moves]
   [:ul (map (fn [[player move]] [:li (str (name player) " moved " move)]) moves)])
 
@@ -52,7 +61,9 @@
 
 (defroutes handler
   (GET "/" [] (html [:body (render-create-game-form)]))
-  (GET "/games" [] (html [:body (render-create-game-form)]))
+  (GET "/games" [] (html [:body 
+                          (render-create-game-form)
+                          (render-open-games (c/load-open-games rps))]))
   (POST "/games" [:as r] 
         (let [game-id (c/create-game rps (get-user r))]
           (ring.util.response/redirect-after-post (str "/games/" game-id))))
@@ -69,9 +80,14 @@
       (println "RESPONSE " level " : " response)
       response)))
 
+(defn wrap-mock-login [handler]
+  (fn [request]
+    (handler (assoc request :session {:me {:name "Jan"}}))))
+
 (defn create-app [implementation]
   (def rps implementation)
   (-> handler 
+;      wrap-mock-login
       wrap-require-facebook-login
       wrap-session 
       wrap-keyword-params

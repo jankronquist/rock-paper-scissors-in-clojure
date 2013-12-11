@@ -22,9 +22,16 @@
           (f/handle-command (c/->DecideMoveCommand game-id player-id move) event-store)
 	        (Thread/sleep 500))
     
+        (load-open-games [this]
+          (let [url (str (env :event-store-uri) "/projection/opengames/state")
+                reply (client/get url {:as :json-string-keys})
+                games (:body reply)]
+            (println games)
+            games))
+    
         (load-game [this game-id] 
-          (let [uri (str (env :event-store-uri) "/projection/games/state?partition=" game-id)
-                reply (client/get uri {:as :json})
+          (let [url (str (env :event-store-uri) "/projection/games/state?partition=" game-id)
+                reply (client/get url {:as :json})
                 game (:body reply)]
             (println game)
             game))))))
