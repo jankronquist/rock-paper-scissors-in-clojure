@@ -9,12 +9,6 @@
   (:require [compojure.route :as route]
             [com.jayway.rps.core :as c]))
 
-(def rps (reify com.jayway.rps.core.RockPaperScissors
-           (create-game [this player-name] "NEW")
-           (make-move [this game-id player-name move] (println "Move: " move))
-           (load-open-games [this] {"gameId" "creator"})
-           (load-game [this game-id] (println "load " game-id))))
-
 (defn get-user [request]
   (get-in request [:session :me :name]))
 
@@ -47,7 +41,7 @@
 (defn render-moves [moves]
   [:ul (map (fn [[player move]] [:li (str (name player) " moved " move)]) moves)])
 
-(defn render-game [game-id player-name]
+(defn render-game [rps game-id player-name]
   (let [game (c/load-game rps game-id)]
     (html [:body
            [:p (str "Created by " (:creator game))]
@@ -59,19 +53,20 @@
              "tied" [:div [:p "Tie!"] (render-moves (:moves game))]
              "???")])))
 
-(defroutes handler
-  (GET "/" [] (html [:body (render-create-game-form)]))
-  (GET "/games" [] (html [:body 
-                          (render-create-game-form)
-                          (render-open-games (c/load-open-games rps))]))
-  (POST "/games" [:as r] 
-        (let [game-id (c/create-game rps (get-user r))]
-          (ring.util.response/redirect-after-post (str "/games/" game-id))))
-  (POST "/games/:game-id" [game-id move :as r] 
-        (c/make-move rps game-id (get-user r) move)
-        (ring.util.response/redirect-after-post (str "/games/" game-id)))
-  (GET "/games/:game-id" [game-id :as r] (render-game game-id (get-user r)))
-  (route/not-found "<h1>Page not found</h1>"))
+(defn create-handler [rps]
+	(routes
+	  (GET "/" [] (html [:body (render-create-game-form)]))
+	  (GET "/games" [] (html [:body 
+	                          (render-create-game-form)
+	                          (render-open-games (c/load-open-games rps))]))
+	  (POST "/games" [:as r] 
+	        (let [game-id (c/create-game rps (get-user r))]
+	          (ring.util.response/redirect-after-post (str "/games/" game-id))))
+	  (POST "/games/:game-id" [game-id move :as r] 
+	        (c/make-move rps game-id (get-user r) move)
+	        (ring.util.response/redirect-after-post (str "/games/" game-id)))
+	  (GET "/games/:game-id" [game-id :as r] (render-game rps game-id (get-user r)))
+	  (route/not-found "<h1>Page not found</h1>")))
 
 (defn wrap-log [handler level]
   (fn [request]
@@ -85,15 +80,14 @@
     (handler (assoc request :session {:me {:name "Jan"}}))))
 
 (defn create-app [implementation]
-  (def rps implementation)
-  (-> handler 
+  (-> (create-handler implementation) 
 ;      wrap-mock-login
       wrap-require-facebook-login
       wrap-session 
       wrap-keyword-params
       wrap-params))
 
-(defn -main [& args]
- (let [game-id (c/create-game rps "player-1")]
-   (c/make-move rps game-id "player-1" "rock")
-   (c/make-move rps game-id "player-2" "scissors")))
+;(defn -main [& args]
+; (let [game-id (c/create-game rps "player-1")]
+;   (c/make-move rps game-id "player-1" "rock")
+;   (c/make-move rps game-id "player-2" "scissors")))
